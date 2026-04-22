@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>単語一覧</title>
+
+<style>
+:root {
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --line: #d9e2f1;
+  --text: #223042;
+  --sub: #617389;
+  --accent: #2f6fed;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: linear-gradient(180deg, #eef4ff 0%, #f8fafc 100%);
+  color: var(--text);
+  padding: 20px;
+}
+
+.container {
+  max-width: 760px;
+  margin: auto;
+}
+
+.panel {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 12px 30px rgba(31, 41, 55, 0.08);
+  border: 1px solid rgba(217, 226, 241, 0.9);
+  margin-bottom: 16px;
+}
+
+h1, p {
+  margin-top: 0;
+}
+
+.subtext {
+  color: var(--sub);
+  line-height: 1.7;
+}
+
+button {
+  appearance: none;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+}
+
+.word-card {
+  background: white;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+}
+
+.word {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.sentence {
+  color: #4b5b6b;
+  line-height: 1.6;
+}
+
+.empty {
+  text-align: center;
+  color: var(--sub);
+  padding: 24px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="panel">
+    <h1 id="title">単語一覧</h1>
+    <p id="summary" class="subtext">読み込み中...</p>
+    <button onclick="location.href='index.html'">戻る</button>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<script>
+const STORAGE_KEY = "vocabSelectionState";
+const PAGE_BLOCK_SIZE = 13;
+const START_PAGE = 16;
+
+const schedules = [
+  { id: "2026-04-23", label: "4/23 単語学習" }
+];
+
+function parseData(data) {
+  return data
+    .trim()
+    .split("\n")
+    .filter(line => line.trim())
+    .map((line, idx) => {
+      const parts = line.split(",");
+      const answer = parts.pop().trim();
+      const question = parts.join(",").trim();
+      return { id: idx, q: question, a: answer };
+    });
+}
+
+function buildPageRanges(words) {
+  const ranges = [];
+  for (let start = 0; start < words.length; start += PAGE_BLOCK_SIZE) {
+    const end = Math.min(start + PAGE_BLOCK_SIZE, words.length);
+    const startPage = START_PAGE + ranges.length * 2;
+    ranges.push({
+      id: `range-${ranges.length + 1}`,
+      label: `P${startPage}&P${startPage + 1}`,
+      start,
+      end
+    });
+  }
+  return ranges;
+}
+
+function loadSelectionFromQueryOrStorage() {
+  const params = new URLSearchParams(location.search);
+  const fromQuerySchedule = params.get("schedule");
+  const fromQueryRanges = params.get("ranges");
+
+  if (fromQuerySchedule && fromQueryRanges) {
+    return {
+      scheduleId: fromQuerySchedule,
+      rangeIds: fromQueryRanges.split("|").filter(Boolean)
+    };
+  }
+
+  try {
+    const state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    return {
+      scheduleId: state.selectedScheduleId || "",
+      rangeIds: Array.isArray(state.selectedRangeIds) ? state.selectedRangeIds : []
+    };
+  } catch {
+    return { scheduleId: "", rangeIds: [] };
+  }
+}
+
+fetch("data.txt?v=" + Date.now())
+  .then(res => res.text())
+  .then(text => {
+    const words = parseData(text);
+    const pageRanges = buildPageRanges(words);
+    const selection = loadSelectionFromQueryOrStorage();
+
+    const schedule = schedules.find(item => item.id === selection.scheduleId);
+    const ranges = pageRanges.filter(range => selection.rangeIds.includes(range.id));
+
+    const title = document.getElementById("title");
+    const summary = document.getElementById("summary");
+    const container = document.getElementById("list");
+
+    if (!schedule || !ranges.length) {
+      title.innerText = "単語一覧";
+      summary.innerText = "範囲が選択されていません。ホーム画面で日程とページ範囲を選んでください。";
+      container.innerHTML = '<div class="panel empty">表示できる単語がありません。</div>';
+      return;
+    }
+
+    title.innerText = `${schedule.label} の単語一覧`;
+    summary.innerText = `表示範囲: ${ranges.map(range => range.label).join(", ")}`;
+
+    const selectedWords = [];
+    ranges.forEach(range => {
+      selectedWords.push(...words.slice(range.start, range.end));
+    });
+
+    selectedWords.forEach(word => {
+      const div = document.createElement("div");
+      div.className = "word-card";
+      div.innerHTML = `
+        <div class="word">${word.a}</div>
+        <div class="sentence">${word.q}</div>
+      `;
+      container.appendChild(div);
+    });
+  });
+</script>
+</body>
+</html>
