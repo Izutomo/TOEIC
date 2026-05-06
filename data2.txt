@@ -1,0 +1,61 @@
+The government is trying to promote economic growth.,economic,政府は経済成長を促進させようと努めている。
+Many economists believe the recession will end in a few years.,economist,多くの経済学者は、経済不況が数年のうちに終わると信じている。
+The global economy is too complex for anyone to predict exactly what will happen.,economy,世界経済は複雑すぎるので、何が起きるかは誰もはっきりと予測できない。
+The trading company is looking to hire people educated in the United States.,educated,その貿易会社は、アメリカで教育を受けた人材を採用しようとしている。
+We are suffering from the effects of inflation.,effect,私たちはインフレの影響に苦しんでいる。
+The company started a very effective advertising campaign.,effective,その会社は、とても効果的な広告キャンペーンを開始した。
+The increase in profitability is thanks to improved efficiency.,efficiency,利益の増加は、効率性の改善によるものである。
+Japan has extremely efficient delivery services.,efficient,日本には極めて効率的な配達サービスがある。
+Business leaders often have very large egos.,ego,ビジネスのリーダーたちは、しばしばプライド（自尊心）が高い。
+There are elements of both creativity and analytical thinking in advertising.,element,広告には、創造性と分析的思考の両方の要素がある。
+Emotions are running high on the trading floor.,emotion,証券取引所の立会場では感情が高ぶっている（気分が高揚している）。
+In her presentation she emphasized the high quality of the product.,emphasize,プレゼンで彼女はその製品の品質の高さを強調した。
+The company employs 3,000 people worldwide.,employ,その会社は、世界中で3,000人を雇用している。
+Managers and employees met several times for training.,employee,マネージャーと従業員は、研修のため年に数回会合をする。
+Every employer should think of workers' conditions.,employer,全ての雇用主は、従業員の職場環境を考えるべきである。
+Employment figures are steadily improving.,employment,雇用に関する数値は着実に改善している。
+2-for-1 offers encourage consumers to buy more than they had intended.,encourage,2個で1個分の値段となる割引は、客に購入予定数量を超える購買促進をさせる。
+Analysts predict that the end of the recession is in sight.,end,アナリストは、不況の終結が見えてきたと予測している。
+The lawyers help them avoid an enormous amount of tax.,enormous,弁護士は、彼らが多額の税金の支払いを回避するように手助けをしている。
+The entire industry will be affected by the new laws.,entire,業界全体が、新しい法律の影響を受けるだろう。
+The accounting entries were being examined by officials.,entry,会計記録が当局者によって調査されていた。
+Even in small companies, computers are essential.,essential,小さい会社でも、コンピューターは必須である。
+The university was established in the Meiji period.,establish,その大学は明治時代に創立された。
+Could you give me an estimate of the cost?,estimate,私に費用の見積もりをくれませんか。
+It is business etiquette to exchange business cards, especially in Japan.,etiquette,名刺を交換することは、特に日本ではビジネスのエチケットである。
+We need to evaluate the quality of our latest product.,evaluate,私たちは、最新の製品の品質を評価する必要がある。
+Our spending mustn't exceed the budget.,exceed,私たちの出費は予算を超えるべきではない。
+I'd like to exchange $500 for yen.,exchange,私は500ドルを円に両替したい。
+ETX exhibited at an Indian auto expo for the first time this year.,exhibit,ETXは、インドの自動車展示会で今年初めて展示をした。
+Exhibitions and trade shows are good ways to promote a brand message or image.,exhibition,展示会と貿易見本市は、ブランドのメッセージやイメージを宣伝するのに良い方法である。
+They would like to expand their business in China.,expand,彼らは中国でビジネスを拡大したい。
+There was a rapid expansion of the market for mobile phones in Africa in the mid-2000's.,expansion,2000年代半ばには、アフリカで携帯電話市場の急速な拡大があった。
+Our company expects to achieve a record-breaking quarter in sales revenue.,expect,我が社は空前の四半期売上高の達成を見込んでいる。
+Several Indian companies now have plans to export inexpensive, eco-friendly cars to Europe and North America.,export,インドの数社は現在、ヨーロッパと北アメリカに低価格で環境に優しい車を輸出する計画がある。
+Spain is now one of the world's largest exporters of red wine.,exporter,スペインは今や世界有数の赤ワイン輸出国の1つだ。
+A group of lawyers is working to expose the wrongdoings of the giant financial firm's board of directors.,expose,ある弁護士グループは、巨大金融機関の取締役会の悪事を暴き出すことに取り組んでいる。
+Tokyo started a new PR campaign intended to extend a warm welcome to foreign companies looking to invest abroad.,extend,東京は、海外投資を計画している外国企業を歓迎するという新たな広報活動を始めた。
+Extreme deforestation in slash-and-burn style agricultural communities continues to be a challenging problem.,extreme,焼き畑式農村での過度の森林伐採は、これからも難しい課題であり続ける。
+Many NPOs are facing a shortage of funding due to the current economic recession.,face,多くの非営利団体は、現在の経済不況による資金不足に直面している。
+A huge advertising budget was one of the main factors in that company's success in entering such a hostile marketplace.,factor,その会社が極めて厳しい競争市場への参入に成功した主要な要因の1つは、巨額の広告費の投入にあった。
+Over the years the photograph had faded in the sunshine.,fade,長い時間を経て、その写真は日差しを浴びて色あせてしまった。
+He was sacked because of a string of failures.,failure,彼は一連の失敗のせいで解雇された。
+Fake name brand goods, like watches and bags, can be purchased for a fraction of the cost of originals.,fake,時計やバッグなどの偽ブランド品が、本物の何分の一かの価格で買える。
+CSI company's fall in annual profits indicates that its rivals have caught up with it.,fall,CSI社の年間利益の減少は、競合各社がCSI社に追い着いたことを示している。
+The accusations against him turned out to be false.,false,彼に対する非難は、結局、根拠のないものであった。
+In Japan, air travel is often preferred to rail travel because of the cheaper fares.,fare,日本では、運賃の安さゆえに、飛行機旅行が鉄道旅行よりも好まれることが多い。
+Because of a fault in engine design, a lot of GMC cars were recalled last year.,fault,エンジンデザインの欠陥のせいで、数多くのゼネラル・モーターズ社製の車が昨年リコールされた。
+Due to their low annual fees, mutual funds from Vanguard are a favorite amongst retired investors.,favorite,年会費が安いので、バンガードの投資信託は退職した投資家に人気がある。
+With all the taxes and extra fees, the total cost turned out to be way more than we expected.,fee,税金と追加料金を加算すると、総額は事前の予想をはるかに上回ってしまった。
+Their job is to feed all the new account information into the computers.,feed,彼らの仕事は、全ての新しい会計情報をコンピューターに入力することだ。
+Recent developments in the field of nanotechnology have made new treatments possible.,field,ナノ技術の最近の進展により、新しい治療が可能になった。
+The figure she quoted me was way too high for me to afford.,figure,彼女が私に示した金額は、私にはとても払えない数字だった。
+All financial transaction records are kept on file for future reference.,file,金融取引の全ての記録が、今後の参照のために整理保管されている。
+The government should impose harsher fines on companies found guilty of environmental pollution.,fine,政府は、環境汚染で有罪となった企業にもっと厳しい罰金を科すべきだ。
+Because natural resources are finite, we should take great care in using them in sustainable ways.,finite,天然資源には限りがあるので、その持続的な利用に細心の注意を払わなければならない。
+Both employees were fired for leaking company secrets.,fire,企業機密を漏えいしたため、2人の社員が解雇された。
+The citizens have been waiting almost two decades for their government to fix the healthcare system.,fix,政府が医療制度を改善するのを、市民はほぼ20年間待ち続けた。
+The Olympic flame is a very important symbol of the spirit of international competition.,flame,五輪の聖火は、国際的な競争心の極めて重要な象徴である。
+The revelation that there were several flaws with the final product caused investors to flee.,flee,完成品にいくつかの欠陥があることが明らかになり、投資家が去って行った。
+All I want is a flexible schedule and higher pay.,flexible,私の望みは、柔軟なスケジュールとより高い賃金だ。
+The children were forbidden to eat fast food.,forbid,その子供たちはファストフードを食べることを禁じられた。
