@@ -215,7 +215,8 @@ const schedules = [
   },
   // ---- 2026 秋学期（Business English A2 の Vocab. テスト日程）----
   // 単語データ（data9.txt など）を追加したら available を true にしてください。
-  // startPage を指定しなければ、範囲は単語番号（No.951〜960 など）で表示されます。
+  // 秋学期は教科書ページではなく 10 語ごとに区切る（No.951〜960 など）。
+  // そのため startPage は書かず、linesPerRange: 10 のままにしてください。
   {
     id: "2026-10-15",
     term: "2026 秋学期",
@@ -223,8 +224,7 @@ const schedules = [
     dataFile: "data9.txt",
     vocabStart: 951,
     vocabEnd: 1000,
-    startPage: 160,
-    linesPerRange: [8, 11, 12, 12, 7],
+    linesPerRange: 10,
     available: true
   },
   {
