@@ -418,12 +418,15 @@ async function renderList() {
     selectedWords.push(...words.slice(range.start, range.end));
   });
 
+  // No. 表示: vocabStart がある日程（秋学期）は単語番号（951〜）、無ければ 1 から
+  const firstNumber = schedule.vocabStart || 1;
+
   selectedWords.forEach(word => {
     const div = document.createElement("div");
     div.className = "word-card";
     div.innerHTML = `
       <div class="word-head">
-        <div class="word-no">No.${word.id + 1}</div>
+        <div class="word-no">No.${firstNumber + word.id}</div>
         <div class="word">${word.a}</div>
       </div>
       <div class="sentence">${word.q}</div>
