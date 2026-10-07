@@ -90,6 +90,17 @@ h1, h2, h3, p {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
+.term-group + .term-group {
+  margin-top: 18px;
+}
+
+.term-heading {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--sub);
+  margin-bottom: 8px;
+}
+
 .option-card {
   border: 1px solid var(--line);
   background: #fff;
@@ -351,7 +362,7 @@ button:disabled {
 
     <div class="section">
       <span class="label">1. テストの日程を選択</span>
-      <div id="scheduleList" class="schedule-grid"></div>
+      <div id="scheduleList"></div>
     </div>
 
     <div class="section">
@@ -410,10 +421,16 @@ button:disabled {
 <script>
 const STORAGE_KEY = "vocabSelectionState";
 
-// 日程を追加するときは、この配列に1件追加するだけでよい構成です。
+// 日程を追加するときは、この配列に1件追加するだけでよい構成です（list.html の schedules も同じ内容にしてください）。
+//   term           : 学期の見出し（同じ term の日程がまとめて表示される）
+//   startPage      : 教科書のページで範囲を区切る場合の開始ページ（ラベルは P16&P17 のようになる）
+//   vocabStart/End : 単語番号で範囲を区切る場合（ラベルは No.951〜960 のようになる）
+//   linesPerRange  : 1範囲あたりの単語数（数値、または範囲ごとの配列）
+//   available      : データファイルを置いたら true にする（false の間は「準備中」と表示）
 const schedules = [
   {
     id: "2026-04-23",
+    term: "2026 春学期",
     label: "4/23 単語学習",
     dataFile: "data.txt",
     startPage: 16,
@@ -422,6 +439,7 @@ const schedules = [
   },
   {
     id: "2026-05-07",
+    term: "2026 春学期",
     label: "5/7 単語学習",
     dataFile: "data2.txt",
     startPage: 26,
@@ -430,6 +448,7 @@ const schedules = [
   },
   {
     id: "2026-05-14",
+    term: "2026 春学期",
     label: "5/14 単語学習",
     dataFile: "data3.txt",
     startPage: 36,
@@ -438,6 +457,7 @@ const schedules = [
   },
   {
     id: "2026-06-04",
+    term: "2026 春学期",
     label: "6/4 単語学習",
     dataFile: "data4.txt",
     startPage: 46,
@@ -446,6 +466,7 @@ const schedules = [
   },
   {
     id: "2026-06-11",
+    term: "2026 春学期",
     label: "6/11 単語学習",
     dataFile: "data5.txt",
     startPage: 56,
@@ -454,6 +475,7 @@ const schedules = [
   },
   {
     id: "2026-06-18",
+    term: "2026 春学期",
     label: "6/18 単語学習",
     dataFile: "data6.txt",
     startPage: 66,
@@ -462,6 +484,7 @@ const schedules = [
   },
   {
     id: "2026-06-25",
+    term: "2026 春学期",
     label: "6/25 単語学習",
     dataFile: "data7.txt",
     startPage: 76,
@@ -470,11 +493,75 @@ const schedules = [
   },
   {
     id: "2026-07-02",
+    term: "2026 春学期",
     label: "7/2 単語学習",
     dataFile: "data8.txt",
     startPage: 86,
     linesPerRange: [12, 13, 11, 12, 11],
     available: true
+  },
+  // ---- 2026 秋学期（Business English A2 の Vocab. テスト日程）----
+  // 単語データ（data9.txt など）を追加したら available を true にしてください。
+  // startPage を指定しなければ、範囲は単語番号（No.951〜960 など）で表示されます。
+  {
+    id: "2026-10-15",
+    term: "2026 秋学期",
+    label: "10/15 単語学習",
+    dataFile: "data9.txt",
+    vocabStart: 951,
+    vocabEnd: 1000,
+    linesPerRange: 10,
+    available: false
+  },
+  {
+    id: "2026-10-29",
+    term: "2026 秋学期",
+    label: "10/29 単語学習",
+    dataFile: "data10.txt",
+    vocabStart: 1001,
+    vocabEnd: 1050,
+    linesPerRange: 10,
+    available: false
+  },
+  {
+    id: "2026-11-12",
+    term: "2026 秋学期",
+    label: "11/12 単語学習",
+    dataFile: "data11.txt",
+    vocabStart: 1051,
+    vocabEnd: 1100,
+    linesPerRange: 10,
+    available: false
+  },
+  {
+    id: "2026-11-26",
+    term: "2026 秋学期",
+    label: "11/26 単語学習",
+    dataFile: "data12.txt",
+    vocabStart: 1101,
+    vocabEnd: 1150,
+    linesPerRange: 10,
+    available: false
+  },
+  {
+    id: "2026-12-10",
+    term: "2026 秋学期",
+    label: "12/10 単語学習",
+    dataFile: "data13.txt",
+    vocabStart: 1151,
+    vocabEnd: 1200,
+    linesPerRange: 10,
+    available: false
+  },
+  {
+    id: "2026-12-24",
+    term: "2026 秋学期",
+    label: "12/24 単語学習",
+    dataFile: "data14.txt",
+    vocabStart: 1201,
+    vocabEnd: 1300,
+    linesPerRange: 10,
+    available: false
   }
 ];
 
@@ -540,15 +627,14 @@ function buildPageRanges(schedule) {
   const words = scheduleWordsMap[schedule.id] || [];
   const ranges = [];
   const rangeSizes = Array.isArray(schedule.linesPerRange) ? schedule.linesPerRange : null;
-  const defaultRangeSize = rangeSizes ? rangeSizes[rangeSizes.length - 1] || 13 : schedule.linesPerRange;
+  const defaultRangeSize = (rangeSizes ? rangeSizes[rangeSizes.length - 1] : schedule.linesPerRange) || 13;
 
   for (let start = 0; start < words.length;) {
     const rangeSize = rangeSizes?.[ranges.length] || defaultRangeSize;
     const end = Math.min(start + rangeSize, words.length);
-    const startPage = schedule.startPage + ranges.length * 2;
     ranges.push({
       id: `${schedule.id}-range-${ranges.length + 1}`,
-      label: `P${startPage}&P${startPage + 1}`,
+      label: buildRangeLabel(schedule, ranges.length, start, end),
       start,
       end
     });
@@ -556,6 +642,19 @@ function buildPageRanges(schedule) {
   }
 
   return ranges;
+}
+
+// 範囲の表示名。startPage があれば教科書のページ（P16&P17）、
+// なければ単語番号（No.951〜960）で表示する。
+function buildRangeLabel(schedule, rangeIndex, start, end) {
+  if (schedule.startPage) {
+    const startPage = schedule.startPage + rangeIndex * 2;
+    return `P${startPage}&P${startPage + 1}`;
+  }
+  if (schedule.vocabStart) {
+    return `No.${schedule.vocabStart + start}〜${schedule.vocabStart + end - 1}`;
+  }
+  return `範囲${rangeIndex + 1}`;
 }
 
 function refreshPageRanges() {
@@ -567,40 +666,80 @@ function renderSchedules() {
   const container = document.getElementById("scheduleList");
   container.innerHTML = "";
 
-  schedules.forEach(schedule => {
-    const words = scheduleWordsMap[schedule.id] || [];
-    const rangeCount = buildPageRanges(schedule).length;
-    const isSelected = selectedScheduleId === schedule.id;
-    const isDisabled = schedule.available === false;
-    const card = document.createElement("label");
-    card.className = "option-card" + (isSelected ? " selected" : "") + (isDisabled ? " disabled" : "");
-    card.innerHTML = `
-      <div class="option-title">
-        <input type="radio" name="schedule" value="${schedule.id}" ${isSelected ? "checked" : ""} ${isDisabled ? "disabled" : ""}>
-        ${schedule.label}
-      </div>
-      <div class="option-sub">${isDisabled ? "準備中" : `${rangeCount} 範囲 / ${words.length} 問`}</div>
-    `;
+  // 学期（term）ごとに見出しを付けてまとめて表示する
+  const terms = [...new Set(schedules.map(schedule => schedule.term || ""))];
 
-    if (isDisabled) {
-      container.appendChild(card);
-      return;
+  terms.forEach(term => {
+    const group = document.createElement("div");
+    group.className = "term-group";
+
+    if (term) {
+      const heading = document.createElement("div");
+      heading.className = "term-heading";
+      heading.innerText = term;
+      group.appendChild(heading);
     }
 
-    card.querySelector("input").addEventListener("change", () => {
-      selectedScheduleId = schedule.id;
-      selectedRangeIds = [];
-      selectedWords = [];
-      correct = 0;
-      hardMode = false;
-      refreshPageRanges();
-      renderSchedules();
-      renderPageRanges();
-      saveState();
-    });
+    const grid = document.createElement("div");
+    grid.className = "schedule-grid";
+    schedules
+      .filter(schedule => (schedule.term || "") === term)
+      .forEach(schedule => grid.appendChild(createScheduleCard(schedule)));
 
-    container.appendChild(card);
+    group.appendChild(grid);
+    container.appendChild(group);
   });
+}
+
+function describeSchedule(schedule) {
+  const words = scheduleWordsMap[schedule.id] || [];
+  const parts = [];
+
+  if (schedule.vocabStart && schedule.vocabEnd) {
+    parts.push(`Vocab. ${schedule.vocabStart}-${schedule.vocabEnd}`);
+  }
+
+  if (schedule.available === false) {
+    parts.push("準備中");
+  } else if (!words.length) {
+    parts.push("データ未登録");
+  } else {
+    parts.push(`${buildPageRanges(schedule).length} 範囲 / ${words.length} 問`);
+  }
+
+  return parts.join(" ・ ");
+}
+
+function createScheduleCard(schedule) {
+  const isSelected = selectedScheduleId === schedule.id;
+  const isDisabled = schedule.available === false;
+  const card = document.createElement("label");
+  card.className = "option-card" + (isSelected ? " selected" : "") + (isDisabled ? " disabled" : "");
+  card.innerHTML = `
+    <div class="option-title">
+      <input type="radio" name="schedule" value="${schedule.id}" ${isSelected ? "checked" : ""} ${isDisabled ? "disabled" : ""}>
+      ${schedule.label}
+    </div>
+    <div class="option-sub">${describeSchedule(schedule)}</div>
+  `;
+
+  if (isDisabled) {
+    return card;
+  }
+
+  card.querySelector("input").addEventListener("change", () => {
+    selectedScheduleId = schedule.id;
+    selectedRangeIds = [];
+    selectedWords = [];
+    correct = 0;
+    hardMode = false;
+    refreshPageRanges();
+    renderSchedules();
+    renderPageRanges();
+    saveState();
+  });
+
+  return card;
 }
 
 function renderPageRanges() {
@@ -611,6 +750,12 @@ function renderPageRanges() {
 
   if (!selectedScheduleId) {
     container.innerHTML = '<div class="empty">先に日程を選択してください。</div>';
+    updateSelectionSummary();
+    return;
+  }
+
+  if (!pageRanges.length) {
+    container.innerHTML = '<div class="empty">この日程の単語データはまだ登録されていません。</div>';
     updateSelectionSummary();
     return;
   }
@@ -936,9 +1081,21 @@ function restoreState() {
 
 async function loadAllSchedules() {
   const loads = schedules.map(async schedule => {
-    const response = await fetch(`${schedule.dataFile}?v=${Date.now()}`);
-    const text = await response.text();
-    scheduleWordsMap[schedule.id] = parseData(text);
+    // 準備中の日程はデータファイルを読みに行かない
+    if (schedule.available === false) {
+      scheduleWordsMap[schedule.id] = [];
+      return;
+    }
+
+    try {
+      const response = await fetch(`${schedule.dataFile}?v=${Date.now()}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      scheduleWordsMap[schedule.id] = parseData(await response.text());
+    } catch (error) {
+      // 1つのファイルが読めなくても、他の日程は使えるようにする
+      console.warn(`${schedule.dataFile} を読み込めませんでした:`, error);
+      scheduleWordsMap[schedule.id] = [];
+    }
   });
 
   await Promise.all(loads);

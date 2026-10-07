@@ -139,9 +139,11 @@ button {
 <script>
 const STORAGE_KEY = "vocabSelectionState";
 
+// index.html の schedules と同じ内容にしてください。
 const schedules = [
   {
     id: "2026-04-23",
+    term: "2026 春学期",
     label: "4/23 単語学習",
     dataFile: "data.txt",
     startPage: 16,
@@ -150,6 +152,7 @@ const schedules = [
   },
   {
     id: "2026-05-07",
+    term: "2026 春学期",
     label: "5/7 単語学習",
     dataFile: "data2.txt",
     startPage: 26,
@@ -158,6 +161,7 @@ const schedules = [
   },
   {
     id: "2026-05-14",
+    term: "2026 春学期",
     label: "5/14 単語学習",
     dataFile: "data3.txt",
     startPage: 36,
@@ -166,6 +170,7 @@ const schedules = [
   },
   {
     id: "2026-06-04",
+    term: "2026 春学期",
     label: "6/4 単語学習",
     dataFile: "data4.txt",
     startPage: 46,
@@ -174,6 +179,7 @@ const schedules = [
   },
   {
     id: "2026-06-11",
+    term: "2026 春学期",
     label: "6/11 単語学習",
     dataFile: "data5.txt",
     startPage: 56,
@@ -182,6 +188,7 @@ const schedules = [
   },
   {
     id: "2026-06-18",
+    term: "2026 春学期",
     label: "6/18 単語学習",
     dataFile: "data6.txt",
     startPage: 66,
@@ -190,6 +197,7 @@ const schedules = [
   },
   {
     id: "2026-06-25",
+    term: "2026 春学期",
     label: "6/25 単語学習",
     dataFile: "data7.txt",
     startPage: 76,
@@ -198,11 +206,75 @@ const schedules = [
   },
   {
     id: "2026-07-02",
+    term: "2026 春学期",
     label: "7/2 単語学習",
     dataFile: "data8.txt",
     startPage: 86,
     linesPerRange: [12, 13, 11, 12, 11],
     available: true
+  },
+  // ---- 2026 秋学期（Business English A2 の Vocab. テスト日程）----
+  // 単語データ（data9.txt など）を追加したら available を true にしてください。
+  // startPage を指定しなければ、範囲は単語番号（No.951〜960 など）で表示されます。
+  {
+    id: "2026-10-15",
+    term: "2026 秋学期",
+    label: "10/15 単語学習",
+    dataFile: "data9.txt",
+    vocabStart: 951,
+    vocabEnd: 1000,
+    linesPerRange: 10,
+    available: false
+  },
+  {
+    id: "2026-10-29",
+    term: "2026 秋学期",
+    label: "10/29 単語学習",
+    dataFile: "data10.txt",
+    vocabStart: 1001,
+    vocabEnd: 1050,
+    linesPerRange: 10,
+    available: false
+  },
+  {
+    id: "2026-11-12",
+    term: "2026 秋学期",
+    label: "11/12 単語学習",
+    dataFile: "data11.txt",
+    vocabStart: 1051,
+    vocabEnd: 1100,
+    linesPerRange: 10,
+    available: false
+  },
+  {
+    id: "2026-11-26",
+    term: "2026 秋学期",
+    label: "11/26 単語学習",
+    dataFile: "data12.txt",
+    vocabStart: 1101,
+    vocabEnd: 1150,
+    linesPerRange: 10,
+    available: false
+  },
+  {
+    id: "2026-12-10",
+    term: "2026 秋学期",
+    label: "12/10 単語学習",
+    dataFile: "data13.txt",
+    vocabStart: 1151,
+    vocabEnd: 1200,
+    linesPerRange: 10,
+    available: false
+  },
+  {
+    id: "2026-12-24",
+    term: "2026 秋学期",
+    label: "12/24 単語学習",
+    dataFile: "data14.txt",
+    vocabStart: 1201,
+    vocabEnd: 1300,
+    linesPerRange: 10,
+    available: false
   }
 ];
 
@@ -236,15 +308,14 @@ function parseData(data) {
 function buildPageRanges(schedule, words) {
   const ranges = [];
   const rangeSizes = Array.isArray(schedule.linesPerRange) ? schedule.linesPerRange : null;
-  const defaultRangeSize = rangeSizes ? rangeSizes[rangeSizes.length - 1] || 13 : schedule.linesPerRange;
+  const defaultRangeSize = (rangeSizes ? rangeSizes[rangeSizes.length - 1] : schedule.linesPerRange) || 13;
 
   for (let start = 0; start < words.length;) {
     const rangeSize = rangeSizes?.[ranges.length] || defaultRangeSize;
     const end = Math.min(start + rangeSize, words.length);
-    const startPage = schedule.startPage + ranges.length * 2;
     ranges.push({
       id: `${schedule.id}-range-${ranges.length + 1}`,
-      label: `P${startPage}&P${startPage + 1}`,
+      label: buildRangeLabel(schedule, ranges.length, start, end),
       start,
       end
     });
@@ -252,6 +323,19 @@ function buildPageRanges(schedule, words) {
   }
 
   return ranges;
+}
+
+// 範囲の表示名。startPage があれば教科書のページ（P16&P17）、
+// なければ単語番号（No.951〜960）で表示する。
+function buildRangeLabel(schedule, rangeIndex, start, end) {
+  if (schedule.startPage) {
+    const startPage = schedule.startPage + rangeIndex * 2;
+    return `P${startPage}&P${startPage + 1}`;
+  }
+  if (schedule.vocabStart) {
+    return `No.${schedule.vocabStart + start}〜${schedule.vocabStart + end - 1}`;
+  }
+  return `範囲${rangeIndex + 1}`;
 }
 
 function loadSelectionFromQueryOrStorage() {
@@ -299,9 +383,22 @@ async function renderList() {
     return;
   }
 
-  const response = await fetch(`${schedule.dataFile}?v=${Date.now()}`);
-  const text = await response.text();
-  const words = parseData(text);
+  let words = [];
+  try {
+    const response = await fetch(`${schedule.dataFile}?v=${Date.now()}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    words = parseData(await response.text());
+  } catch (error) {
+    console.warn(`${schedule.dataFile} を読み込めませんでした:`, error);
+  }
+
+  if (!words.length) {
+    title.innerText = `${schedule.label} の単語一覧`;
+    summary.innerText = "単語データがまだ登録されていません。";
+    container.innerHTML = '<div class="panel empty">まだ表示できる単語がありません。</div>';
+    return;
+  }
+
   const pageRanges = buildPageRanges(schedule, words);
   const ranges = pageRanges.filter(range => selection.rangeIds.includes(range.id));
 
