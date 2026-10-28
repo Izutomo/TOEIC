@@ -111,6 +111,23 @@ button {
   font-weight: bold;
 }
 
+.meaning {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f3f6fb;
+  color: var(--text);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.headword {
+  display: inline-block;
+  font-weight: bold;
+  color: var(--accent);
+  margin-right: 10px;
+}
+
 .empty {
   text-align: center;
   color: var(--sub);
@@ -279,30 +296,43 @@ const schedules = [
   }
 ];
 
+const JAPANESE = /[ぁ-んァ-ン一-龠]/;
+
+// データファイルの形式（1行1問、カンマ区切り。英文の中のカンマはそのままでよい）
+//   3列: 英文（( ) が空所）, 答え, 英文の日本語訳                … 春学期の形式
+//   5列: 英文, 答え, 英文の日本語訳, 見出し語, 単語の日本語訳     … 秋学期の形式
+//        （見出し語と単語の日本語訳は「日本語訳から英単語」の学習に使う）
 function parseData(data) {
   return data
     .trim()
     .split("\n")
     .filter(line => line.trim())
     .map((line, idx) => {
-      let question = "";
+      const fields = line.split(",");
+      const n = fields.length;
+      const isJapanese = i => JAPANESE.test(fields[i] || "");
+      let question = line.trim();
       let answer = "";
       let translation = "";
-      const tripleMatch = line.match(/^(.*),\s*([^,]+),\s*([^,]+)$/);
-      const doubleMatch = line.match(/^(.*),\s*([^,]+)$/);
+      let headword = "";
+      let meaning = "";
 
-      if (tripleMatch && /[ぁ-んァ-ン一-龠]/.test(tripleMatch[3])) {
-        question = tripleMatch[1].trim();
-        answer = tripleMatch[2].trim();
-        translation = tripleMatch[3].trim();
-      } else if (doubleMatch) {
-        question = doubleMatch[1].trim();
-        answer = doubleMatch[2].trim();
-      } else {
-        question = line.trim();
+      if (n >= 5 && isJapanese(n - 1) && !isJapanese(n - 2) && isJapanese(n - 3) && !isJapanese(n - 4)) {
+        question = fields.slice(0, n - 4).join(",").trim();
+        answer = fields[n - 4].trim();
+        translation = fields[n - 3].trim();
+        headword = fields[n - 2].trim();
+        meaning = fields[n - 1].trim();
+      } else if (n >= 3 && isJapanese(n - 1)) {
+        question = fields.slice(0, n - 2).join(",").trim();
+        answer = fields[n - 2].trim();
+        translation = fields[n - 1].trim();
+      } else if (n >= 2) {
+        question = fields.slice(0, n - 1).join(",").trim();
+        answer = fields[n - 1].trim();
       }
 
-      return { id: idx, q: question, a: answer, jp: translation };
+      return { id: idx, q: question, a: answer, jp: translation, word: headword, meaning };
     });
 }
 
@@ -431,6 +461,7 @@ async function renderList() {
       </div>
       <div class="sentence">${word.q}</div>
       <div class="translation">${word.jp || ""}</div>
+      ${word.word && word.meaning ? `<div class="meaning"><span class="headword">${word.word}</span> ${word.meaning}</div>` : ""}
     `;
     container.appendChild(div);
   });

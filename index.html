@@ -77,7 +77,8 @@ h1, h2, h3, p {
 }
 
 .schedule-grid,
-.page-grid {
+.page-grid,
+.mode-grid {
   display: grid;
   gap: 10px;
 }
@@ -88,6 +89,10 @@ h1, h2, h3, p {
 
 .page-grid {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.mode-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .term-group + .term-group {
@@ -357,7 +362,7 @@ button:disabled {
   <div id="selectionView" class="card">
     <div class="hero">
       <h1>英単語学習</h1>
-      <p>学習する日程とページ範囲を選んで、選んだ単語だけで穴埋め学習できます。</p>
+      <p>学習する日程と範囲、学習方法（英文の穴埋め／日本語訳から英単語）を選んで、選んだ単語だけで学習できます。</p>
     </div>
 
     <div class="section">
@@ -368,6 +373,11 @@ button:disabled {
     <div class="section">
       <span class="label">2. 学習範囲を選択（複数選択可）</span>
       <div id="pageRangeList" class="page-grid"></div>
+    </div>
+
+    <div class="section">
+      <span class="label">3. 学習方法を選択</span>
+      <div id="modeList" class="mode-grid"></div>
     </div>
 
     <div id="selectionSummary" class="summary">
@@ -384,7 +394,7 @@ button:disabled {
     <div class="study-header">
       <div>
         <div class="badge" id="studyTarget">選択範囲</div>
-        <h2>穴埋め学習</h2>
+        <h2 id="studyTitle">穴埋め学習</h2>
       </div>
       <div class="meta">
         <div id="progress"></div>
@@ -396,7 +406,7 @@ button:disabled {
       <div class="study-tools">
         <label class="toggle-chip">
           <input type="checkbox" id="translationToggle">
-          日本語訳を表示
+          <span id="translationToggleLabel">日本語訳を表示</span>
         </label>
       </div>
       <h3 id="question">Loading...</h3>
@@ -578,6 +588,7 @@ let correct = 0;
 let hardMode = false;
 let isComposing = false;
 let showTranslation = false;
+let studyMode = "blank"; // "blank": 英文の穴埋め / "meaning": 日本語訳から英単語
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -586,27 +597,40 @@ function shuffle(array) {
   }
 }
 
+const JAPANESE = /[ぁ-んァ-ン一-龠]/;
+
+// データファイルの形式（1行1問、カンマ区切り。英文の中のカンマはそのままでよい）
+//   3列: 英文（( ) が空所）, 答え, 英文の日本語訳                … 春学期の形式
+//   5列: 英文, 答え, 英文の日本語訳, 見出し語, 単語の日本語訳     … 秋学期の形式
+//        （見出し語と単語の日本語訳は「日本語訳から英単語」の学習に使う）
 function parseData(data) {
   return data
     .trim()
     .split("\n")
     .filter(line => line.trim())
     .map((line, idx) => {
-      let question = "";
+      const fields = line.split(",");
+      const n = fields.length;
+      const isJapanese = i => JAPANESE.test(fields[i] || "");
+      let question = line.trim();
       let answer = "";
       let translation = "";
-      const tripleMatch = line.match(/^(.*),\s*([^,]+),\s*([^,]+)$/);
-      const doubleMatch = line.match(/^(.*),\s*([^,]+)$/);
+      let headword = "";
+      let meaning = "";
 
-      if (tripleMatch && /[ぁ-んァ-ン一-龠]/.test(tripleMatch[3])) {
-        question = tripleMatch[1].trim();
-        answer = tripleMatch[2].trim();
-        translation = tripleMatch[3].trim();
-      } else if (doubleMatch) {
-        question = doubleMatch[1].trim();
-        answer = doubleMatch[2].trim();
-      } else {
-        question = line.trim();
+      if (n >= 5 && isJapanese(n - 1) && !isJapanese(n - 2) && isJapanese(n - 3) && !isJapanese(n - 4)) {
+        question = fields.slice(0, n - 4).join(",").trim();
+        answer = fields[n - 4].trim();
+        translation = fields[n - 3].trim();
+        headword = fields[n - 2].trim();
+        meaning = fields[n - 1].trim();
+      } else if (n >= 3 && isJapanese(n - 1)) {
+        question = fields.slice(0, n - 2).join(",").trim();
+        answer = fields[n - 2].trim();
+        translation = fields[n - 1].trim();
+      } else if (n >= 2) {
+        question = fields.slice(0, n - 1).join(",").trim();
+        answer = fields[n - 1].trim();
       }
 
       return {
@@ -614,6 +638,8 @@ function parseData(data) {
         q: question,
         a: answer,
         jp: translation,
+        word: headword,
+        meaning,
         wrongCount: 0,
         marked: false
       };
@@ -737,10 +763,77 @@ function createScheduleCard(schedule) {
     refreshPageRanges();
     renderSchedules();
     renderPageRanges();
+    renderModeOptions();
     saveState();
   });
 
   return card;
+}
+
+// 学習方法。"meaning" は秋学期から導入された「単語の日本語訳だけを見て英単語を書く」形式
+const STUDY_MODES = [
+  { id: "blank", title: "英文の穴埋め", sub: "例文の（ ）に入る英単語を入力" },
+  { id: "meaning", title: "日本語訳から英単語", sub: "単語の日本語訳を見て英単語を入力" }
+];
+
+function scheduleHasMeanings(schedule) {
+  const words = schedule ? scheduleWordsMap[schedule.id] || [] : [];
+  return words.some(word => word.word && word.meaning);
+}
+
+function getStudyModeTitle() {
+  const mode = STUDY_MODES.find(item => item.id === studyMode);
+  return mode ? mode.title : "";
+}
+
+function getExpectedAnswer(word) {
+  return studyMode === "meaning" ? word.word : word.a;
+}
+
+function applyModeToStudyView() {
+  const isMeaning = studyMode === "meaning";
+  document.getElementById("studyTitle").innerText = isMeaning ? "日本語訳から英単語" : "穴埋め学習";
+  document.getElementById("translationToggleLabel").innerText = isMeaning ? "例文をヒントとして表示" : "日本語訳を表示";
+  document.getElementById("answer").placeholder = isMeaning ? "英単語を入力" : "答えを入力";
+}
+
+function renderModeOptions() {
+  const container = document.getElementById("modeList");
+  container.innerHTML = "";
+
+  const schedule = getSelectedSchedule();
+  const meaningAvailable = scheduleHasMeanings(schedule);
+  if (studyMode === "meaning" && !meaningAvailable) {
+    studyMode = "blank";
+  }
+
+  STUDY_MODES.forEach(mode => {
+    const isDisabled = mode.id === "meaning" && !meaningAvailable;
+    const isSelected = studyMode === mode.id;
+    const sub = !isDisabled
+      ? mode.sub
+      : (schedule ? "この日程には単語の日本語訳データがありません" : "日程を選ぶと選択できます");
+    const card = document.createElement("label");
+    card.className = "option-card" + (isSelected ? " selected" : "") + (isDisabled ? " disabled" : "");
+    card.innerHTML = `
+      <div class="option-title">
+        <input type="radio" name="studyMode" value="${mode.id}" ${isSelected ? "checked" : ""} ${isDisabled ? "disabled" : ""}>
+        ${mode.title}
+      </div>
+      <div class="option-sub">${sub}</div>
+    `;
+
+    if (!isDisabled) {
+      card.querySelector("input").addEventListener("change", () => {
+        studyMode = mode.id;
+        renderModeOptions();
+        updateSelectionSummary();
+        saveState();
+      });
+    }
+
+    container.appendChild(card);
+  });
 }
 
 function renderPageRanges() {
@@ -808,7 +901,10 @@ function buildSelectedWords() {
     selected.push(...words.slice(range.start, range.end));
   });
 
-  return selected.map(word => ({ ...word }));
+  // 日本語訳から英単語のモードでは、見出し語と単語の日本語訳があるものだけを出題する
+  return selected
+    .filter(word => studyMode !== "meaning" || (word.word && word.meaning))
+    .map(word => ({ ...word }));
 }
 
 function buildSelectedWordsWithSavedProgress(savedWords = []) {
@@ -853,6 +949,7 @@ function updateSelectionSummary() {
     <strong>${schedule.label}</strong><br>
     データ: ${schedule.dataFile}<br>
     範囲: ${ranges.map(range => range.label).join(", ")}<br>
+    学習方法: ${getStudyModeTitle()}<br>
     出題数: ${count} 問
   `;
   startButton.disabled = false;
@@ -916,9 +1013,13 @@ function showQuestion() {
     return;
   }
 
-  questionEl.innerText = currentList[index].q;
-  if (showTranslation && currentList[index].jp) {
-    translationEl.innerText = currentList[index].jp;
+  const current = currentList[index];
+  const isMeaning = studyMode === "meaning";
+  // 穴埋め: 英文を出題し、ヒントは日本語訳 / 日本語訳から英単語: 単語の日本語訳を出題し、ヒントは例文
+  questionEl.innerText = isMeaning ? current.meaning : current.q;
+  const hint = isMeaning ? current.q : current.jp;
+  if (showTranslation && hint) {
+    translationEl.innerText = hint;
     translationEl.classList.remove("hidden");
   } else {
     translationEl.innerText = "";
@@ -949,7 +1050,13 @@ function checkAnswer() {
 
   if (!current) return;
 
-  if (input === current.a) {
+  const expected = getExpectedAnswer(current);
+  // 日本語訳から英単語のモードは見出し語（小文字）が答えなので、大文字小文字は区別しない
+  const isCorrect = studyMode === "meaning"
+    ? input.toLowerCase() === expected.toLowerCase()
+    : input === expected;
+
+  if (isCorrect) {
     result.innerText = "正解！";
     result.className = "ok";
     correct++;
@@ -960,7 +1067,7 @@ function checkAnswer() {
     syncCurrentToSelected(current);
     index++;
   } else {
-    result.innerText = `不正解: ${current.a}`;
+    result.innerText = `不正解: ${expected}`;
     result.className = "ng";
     current.marked = true;
     current.wrongCount++;
@@ -993,6 +1100,7 @@ function startStudy() {
   const schedule = getSelectedSchedule();
   const ranges = getSelectedRanges();
   document.getElementById("studyTarget").innerText = `${schedule.label} / ${ranges.map(range => range.label).join(", ")}`;
+  applyModeToStudyView();
 
   rebuildList();
   updateHardModeCount();
@@ -1041,6 +1149,7 @@ function saveState() {
     correct,
     hardMode,
     showTranslation,
+    studyMode,
     studyOpened: !document.getElementById("studyView").classList.contains("hidden")
   }));
 }
@@ -1060,6 +1169,8 @@ function restoreState() {
   refreshPageRanges();
   showTranslation = !!state.showTranslation;
   document.getElementById("translationToggle").checked = showTranslation;
+  studyMode = state.studyMode === "meaning" && scheduleHasMeanings(getSelectedSchedule()) ? "meaning" : "blank";
+  applyModeToStudyView();
 
   if (Array.isArray(state.selectedWords) && state.selectedWords.length) {
     selectedWords = buildSelectedWordsWithSavedProgress(state.selectedWords);
@@ -1120,6 +1231,7 @@ loadAllSchedules().then(() => {
   restoreState();
   renderSchedules();
   renderPageRanges();
+  renderModeOptions();
   updateSelectionSummary();
   updateHardModeCount();
 });
