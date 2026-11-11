@@ -276,6 +276,13 @@ button:disabled {
   margin: 0;
 }
 
+.question-no {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--sub);
+  margin-bottom: 6px;
+}
+
 #question {
   font-size: 24px;
   line-height: 1.6;
@@ -380,6 +387,11 @@ button:disabled {
       <div id="modeList" class="mode-grid"></div>
     </div>
 
+    <div class="section">
+      <span class="label">4. 出題順を選択</span>
+      <div id="orderList" class="mode-grid"></div>
+    </div>
+
     <div id="selectionSummary" class="summary">
       日程とページ範囲を選択してください。
     </div>
@@ -409,6 +421,7 @@ button:disabled {
           <span id="translationToggleLabel">日本語訳を表示</span>
         </label>
       </div>
+      <div id="questionNo" class="question-no hidden"></div>
       <h3 id="question">Loading...</h3>
       <p id="translation" class="hidden"></p>
       <input type="text" id="answer" placeholder="答えを入力">
@@ -589,6 +602,7 @@ let hardMode = false;
 let isComposing = false;
 let showTranslation = false;
 let studyMode = "blank"; // "blank": 英文の穴埋め / "meaning": 日本語訳から英単語
+let questionOrder = "random"; // "random": シャッフル / "number": 単語番号順
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -792,7 +806,8 @@ function getExpectedAnswer(word) {
 
 function applyModeToStudyView() {
   const isMeaning = studyMode === "meaning";
-  document.getElementById("studyTitle").innerText = isMeaning ? "日本語訳から英単語" : "穴埋め学習";
+  const orderSuffix = questionOrder === "number" ? "（番号順）" : "";
+  document.getElementById("studyTitle").innerText = (isMeaning ? "日本語訳から英単語" : "穴埋め学習") + orderSuffix;
   document.getElementById("translationToggleLabel").innerText = isMeaning ? "例文をヒントとして表示" : "日本語訳を表示";
   document.getElementById("answer").placeholder = isMeaning ? "英単語を入力" : "答えを入力";
 }
@@ -831,6 +846,52 @@ function renderModeOptions() {
         saveState();
       });
     }
+
+    container.appendChild(card);
+  });
+}
+
+// 出題順。"number" は単語番号（データファイルの行順）の小さい順
+const QUESTION_ORDERS = [
+  { id: "random", title: "ランダム", sub: "毎回シャッフルして出題" },
+  { id: "number", title: "番号順", sub: "単語番号（No.）の小さい順に出題" }
+];
+
+function getQuestionOrderTitle() {
+  const order = QUESTION_ORDERS.find(item => item.id === questionOrder);
+  return order ? order.title : "";
+}
+
+function sortForStudy(list) {
+  if (questionOrder === "number") {
+    list.sort((a, b) => a.id - b.id);
+  } else {
+    shuffle(list);
+  }
+}
+
+function renderOrderOptions() {
+  const container = document.getElementById("orderList");
+  container.innerHTML = "";
+
+  QUESTION_ORDERS.forEach(order => {
+    const isSelected = questionOrder === order.id;
+    const card = document.createElement("label");
+    card.className = "option-card" + (isSelected ? " selected" : "");
+    card.innerHTML = `
+      <div class="option-title">
+        <input type="radio" name="questionOrder" value="${order.id}" ${isSelected ? "checked" : ""}>
+        ${order.title}
+      </div>
+      <div class="option-sub">${order.sub}</div>
+    `;
+
+    card.querySelector("input").addEventListener("change", () => {
+      questionOrder = order.id;
+      renderOrderOptions();
+      updateSelectionSummary();
+      saveState();
+    });
 
     container.appendChild(card);
   });
@@ -950,6 +1011,7 @@ function updateSelectionSummary() {
     データ: ${schedule.dataFile}<br>
     範囲: ${ranges.map(range => range.label).join(", ")}<br>
     学習方法: ${getStudyModeTitle()}<br>
+    出題順: ${getQuestionOrderTitle()}<br>
     出題数: ${count} 問
   `;
   startButton.disabled = false;
@@ -963,7 +1025,7 @@ function rebuildList() {
     currentList = [...selectedWords];
   }
 
-  shuffle(currentList);
+  sortForStudy(currentList);
   index = 0;
 }
 
@@ -981,8 +1043,11 @@ function showQuestion() {
   const answerInput = document.getElementById("answer");
   const submitButton = document.querySelector(".question-box .primary");
   const restartButton = document.getElementById("restartButton");
+  const questionNoEl = document.getElementById("questionNo");
 
   restartButton.classList.add("hidden");
+  questionNoEl.innerText = "";
+  questionNoEl.classList.add("hidden");
 
   if (!currentList.length) {
     questionEl.innerText = hardMode ? "よく間違えた問題がまだありません" : "問題がありません";
@@ -1015,6 +1080,12 @@ function showQuestion() {
 
   const current = currentList[index];
   const isMeaning = studyMode === "meaning";
+  const schedule = getSelectedSchedule();
+  // 単語番号（vocabStart がある秋学期の日程のみ）を問題の上に表示する
+  if (schedule && schedule.vocabStart) {
+    questionNoEl.innerText = `No.${schedule.vocabStart + current.id}`;
+    questionNoEl.classList.remove("hidden");
+  }
   // 穴埋め: 英文を出題し、ヒントは日本語訳 / 日本語訳から英単語: 単語の日本語訳を出題し、ヒントは例文
   questionEl.innerText = isMeaning ? current.meaning : current.q;
   const hint = isMeaning ? current.q : current.jp;
@@ -1092,7 +1163,7 @@ function startStudy() {
   selectedWords = buildSelectedWords();
   if (!selectedWords.length) return;
 
-  shuffle(selectedWords);
+  sortForStudy(selectedWords);
   correct = 0;
   index = 0;
   hardMode = false;
@@ -1150,6 +1221,7 @@ function saveState() {
     hardMode,
     showTranslation,
     studyMode,
+    questionOrder,
     studyOpened: !document.getElementById("studyView").classList.contains("hidden")
   }));
 }
@@ -1170,6 +1242,7 @@ function restoreState() {
   showTranslation = !!state.showTranslation;
   document.getElementById("translationToggle").checked = showTranslation;
   studyMode = state.studyMode === "meaning" && scheduleHasMeanings(getSelectedSchedule()) ? "meaning" : "blank";
+  questionOrder = state.questionOrder === "number" ? "number" : "random";
   applyModeToStudyView();
 
   if (Array.isArray(state.selectedWords) && state.selectedWords.length) {
@@ -1232,6 +1305,7 @@ loadAllSchedules().then(() => {
   renderSchedules();
   renderPageRanges();
   renderModeOptions();
+  renderOrderOptions();
   updateSelectionSummary();
   updateHardModeCount();
 });
